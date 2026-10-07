@@ -1,0 +1,44 @@
+name: QAOps Smart Pipeline
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  qaops-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 2. Environment Setup
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+        env:
+          NODE_ENV: test
+          CI_RUNNER_USER: andressa_santana_puc2026
+
+      - name: 3. Install Deps
+        run: |
+          set -e
+          npm ci
+
+      - name: 4. Linter & Static Analysis
+        run: |
+          set -e
+          npm run lint
+
+      - name: 5. Smart Tests
+        run: |
+          set -e
+          npm test -- --maxWorkers=50%
+
+      - name: 6. Security SAST Scanner
+        run: |
+          set -e
+          npm audit --audit-level=high
